@@ -34,3 +34,40 @@ model.add(keras.layers.Dense(1, activation="sigmoid"))
 
 
 model.summary()  # prints a summary of the model
+model.compile(optimizer = "adam",loss = "binary_crossentropy", metrics = ["accuracy"])
+x_val = train_data[:10000]
+x_train = train_data[10000:]
+
+y_val = train_labels[:10000]
+y_train = train_labels[10000:]
+
+fitModel = model.fit(x_train, y_train, epochs=40, batch_size=512, validation_data=(x_val, y_val), verbose=1)
+
+results = model.evaluate(test_data, test_labels)
+print(results)
+
+# after saving the trained model as '.h5' file,we can comment the above training section. we can only use the
+# below saved file for for testing new examples
+
+model.save("model.h5")
+
+def review_encode(s):
+	encoded = [1]
+
+	for word in s:
+		if word.lower() in word_index:
+			encoded.append(word_index[word.lower()])
+		else:
+			encoded.append(2)
+
+	return encoded
+
+with open("test.txt", encoding="utf-8") as f:
+	for line in f.readlines():
+		nline = line.replace(",", "").replace(".", "").replace("(", "").replace(")", "").replace(":", "").replace("\"","").strip().split(" ")
+		encode = review_encode(nline)
+		encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post", maxlen=250) # make the data 250 words long
+		predict = model.predict(encode)
+		print(line)
+		print(encode)
+		print(predict[0])
